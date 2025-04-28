@@ -1,0 +1,15 @@
+{
+  "name": "playbackend",
+  "version": "1.0.0",
+  "description": "main project of backend series",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "backend",
+    "javascript"
+  ],
+  "author": "addy-301",
+  "license": "ISC"
+}
