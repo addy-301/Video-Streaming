@@ -34,7 +34,7 @@ const registerUser = asyncHandler(async(req, res)=>{
     if([fullName, email, username, password].some((field) => field?.trim()==="")) {
         throw new ApiError(400, "All fields are required");
     }
-    const existingUser=await User.findOne({email}).then((user)=>{
+    const existingUser=await User.findOne({
         $or:[
             {email},
             {username}
@@ -78,8 +78,8 @@ const loginUser = asyncHandler(async(req, res)=>{
     // password check
     // access and refresh token generation
     // send cookies
-    const {username, email, password}=req.body;
-    if(!username ||!email)
+    const {email, username, password}=req.body;
+    if(!username && !email)
         throw new ApiError(400, "Username or email is required");
     const user=await User.findOne({
         $or:[{username}, {email}]
@@ -101,7 +101,7 @@ const loginUser = asyncHandler(async(req, res)=>{
     }
     return res
     .status(200)
-    .cookie("acessToken", accessToken, options)
+    .cookie("accessToken", accessToken, options)
     .cookie("refreshToken", refreshToken, options)
     .json(new ApiResponse(200, {
         user: loggedInUser, accessToken, refreshToken
