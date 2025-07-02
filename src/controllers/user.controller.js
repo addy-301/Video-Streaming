@@ -113,8 +113,8 @@ const logoutUser = asyncHandler(async(req, res)=>{
     await User.findByIdAndUpdate(
         req.user._id,
         {
-            $set: {
-                refreshToken: undefined
+            $unset: {
+                refreshToken: 1
             }
         },
         {
@@ -204,6 +204,7 @@ const updateUserAvatar=asyncHandler(async(req, res)=>{
 
 const updateUserCoverImage=asyncHandler(async(req, res)=>{
     const coverImageLocalPath=req.file?.path
+    // TODO: delete old cover image from cloudinary
     if(!coverImageLocalPath)
         throw new ApiError(400, "Cover image is required");
     const coverImage=await uploadOnCloudinary(coverImageLocalPath)
