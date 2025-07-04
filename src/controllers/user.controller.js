@@ -97,7 +97,8 @@ const loginUser = asyncHandler(async(req, res)=>{
 
     const options={
         httpOnly: true,
-        secure: true
+        secure: true,
+        sameSite: "None"
     }
     return res
     .status(200)
@@ -123,7 +124,8 @@ const logoutUser = asyncHandler(async(req, res)=>{
     )
     const options={
         httpOnly: true,
-        secure: true
+        secure: true,
+        sameSite: "None"
     }
     return res
     .status(200)
@@ -145,7 +147,8 @@ const refreshAccessToken = asyncHandler(async(req, res)=>{
             throw new ApiError(401, "Refresh token expired or invalid");
         const options={
             httpOnly: true,
-            secure: true
+            secure: true,
+            sameSite: "None"
         }
         const {accessToken, newRefreshToken}=await generateAccessAndRefreshTokens(user._id)
         return res
@@ -194,12 +197,19 @@ const updateUserAvatar=asyncHandler(async(req, res)=>{
     const avatar=await uploadOnCloudinary(avatarLocalPath)
     if(!avatar.url)
         throw new ApiError(400, "Error while uploading Avatar");
-    const user=await User.findByIdAndUpdate(req.user?._id, {
+    const user=await User.findById(req.user?._id).select("avatar");
+    const oldAvatar=user.avatar.public_id;
+    const updatedAvatar=await User.findByIdAndUpdate(req.user?._id, {
         $set:{
-            avatar: avatar.url
+            avatar:{
+                public_id: avatar.public_id,
+                url: avatar.secure_url
+            } 
         }
     }, {new: true}).select("-password");
-    return res.status(200).json(new ApiResponse(200, user, "Avatar updated successfully"));
+    if(oldAvatar&&updatedAvatar.avatar.public_id)
+        await deleteFromCloudinary(oldAvatar);
+    return res.status(200).json(new ApiResponse(200, updatedAvatar, "Avatar updated successfully"));
 })
 
 const updateUserCoverImage=asyncHandler(async(req, res)=>{
@@ -210,12 +220,19 @@ const updateUserCoverImage=asyncHandler(async(req, res)=>{
     const coverImage=await uploadOnCloudinary(coverImageLocalPath)
     if(!coverImage.url)
         throw new ApiError(400, "Error while uploading Cover Image");
-    const user=await User.findByIdAndUpdate(req.user?._id,{
+    const user=await User.findById(req.user?._id).select("coverImage");
+    const oldCoverImage=user.coverImage.public_id;
+    const updatedCoverImage=await User.findByIdAndUpdate(req.user?._id,{
         $set:{
-            coverImage: coverImage.url
+            coverImage: {
+                public_id: coverImage.public_id,
+                url: coverImage.secure_url   
+            }
         }
     }, {new: true}).select("-password");
-    return res.status(200).json(new ApiResponse(200, user, "Cover image updated successfully"));
+    if(oldCoverImage&&updatedCoverImage.coverImage.public_id)
+        await deleteFromCloudinary(oldCoverImage);
+    return res.status(200).json(new ApiResponse(200, updatedCoverImage, "Cover image updated successfully"));
 })
 
 const getUserChannelProfile=asyncHandler(async(req, res)=>{
